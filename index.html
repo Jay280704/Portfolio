@@ -15,6 +15,9 @@
   <!-- Tabler Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
+  <!-- Projects Central Data -->
+  <script src="projects.js"></script>
+
   <style>
     /* CSS Variables & Theme Setup - Modern Slate Light Aurora */
     :root {
@@ -962,16 +965,77 @@
 
   <!-- Dynamic Interaction Scripts -->
   <script>
-    // Spotlight gradient tracking effect on project cards
-    document.querySelectorAll('.project-card').forEach(card => {
-      card.addEventListener('mousemove', e => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        card.style.setProperty('--mouse-x', `${x}px`);
-        card.style.setProperty('--mouse-y', `${y}px`);
+    // Dynamic projects rendering
+    function renderProjects() {
+      let projects = [];
+      try {
+        const stored = localStorage.getItem('portfolio_projects');
+        if (stored) {
+          projects = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error('Error reading projects from localStorage:', e);
+      }
+      
+      if (!projects || projects.length === 0) {
+        projects = window.portfolioProjects;
+      }
+      
+      if (projects && projects.length > 0) {
+        const grid = document.querySelector('.projects-grid');
+        if (grid) {
+          grid.innerHTML = ''; // clear fallback static projects
+          projects.forEach(proj => {
+            let displayLink = proj.link;
+            try {
+              const url = new URL(proj.link);
+              displayLink = url.hostname + (url.pathname !== '/' ? url.pathname : '');
+            } catch (e) {}
+
+            const tagsHTML = (proj.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('\n            ');
+
+            const card = document.createElement('div');
+            card.className = 'project-card';
+            card.onclick = () => window.open(proj.link, '_blank');
+            card.innerHTML = `
+          <div class="project-image">
+            <img src="${proj.image}" alt="${proj.title}">
+          </div>
+          <div class="project-number">${proj.number || ''}</div>
+          <div class="project-icon">${proj.icon || '💻'}</div>
+          <div class="project-title">${proj.title}</div>
+          <div class="project-subtitle">${proj.subtitle || ''}</div>
+          <p class="project-desc">${proj.desc}</p>
+          <div class="project-tags">
+            ${tagsHTML}
+          </div>
+          <a href="${proj.link}" target="_blank" class="project-link" onclick="event.stopPropagation()">
+            ${displayLink} <i class="ti ti-external-link" aria-hidden="true"></i>
+          </a>
+            `;
+            grid.appendChild(card);
+          });
+        }
+      }
+    }
+    
+    // Initial Render
+    renderProjects();
+
+    // Spotlight gradient tracking effect on project cards (delegated)
+    const projectsGrid = document.querySelector('.projects-grid');
+    if (projectsGrid) {
+      projectsGrid.addEventListener('mousemove', e => {
+        const card = e.target.closest('.project-card');
+        if (card) {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+        }
       });
-    });
+    }
 
     // Handle active section link highlighting on scroll
     const sections = document.querySelectorAll('section, .hero');

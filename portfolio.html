@@ -12,6 +12,9 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap"
         rel="stylesheet">
 
+    <!-- Projects Central Data -->
+    <script src="projects.js"></script>
+
     <style>
         /* CSS variables for a premium, unified theme */
         :root {
@@ -1429,8 +1432,69 @@
         // Local Storage Contact Database
         let localContactInbox = [];
 
+        function renderProjectsPortfolio() {
+            let projects = [];
+            try {
+                const stored = localStorage.getItem('portfolio_projects');
+                if (stored) {
+                    projects = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Error reading projects from localStorage:', e);
+            }
+
+            if (!projects || projects.length === 0) {
+                projects = window.portfolioProjects;
+            }
+
+            if (projects && projects.length > 0) {
+                const container = document.getElementById('projects');
+                if (container) {
+                    // remove all article elements
+                    const articles = container.querySelectorAll('article.project-card');
+                    articles.forEach(el => el.remove());
+
+                    projects.forEach(proj => {
+                        const article = document.createElement('article');
+                        article.className = 'project-card';
+
+                        const featuresHTML = (proj.features || []).map(feat => `<li>${feat}</li>`).join('\n                                ');
+                        const tagsHTML = (proj.tags || []).map(tag => `<span class="project-tag">${tag}</span>`).join('\n                                ');
+
+                        article.innerHTML = `
+                    <div class="project-info">
+                        <div>
+                            <div class="project-meta">
+                                <span class="project-type-tag">${proj.typeTag || 'Project'}</span>
+                                <span class="project-tag">${proj.tags && proj.tags[0] ? proj.tags[0] : ''}</span>
+                            </div>
+                            <h3 class="project-title">${proj.title}</h3>
+                            <p class="project-desc">
+                                ${proj.desc}
+                            </p>
+                            <ul class="project-features">
+                                ${featuresHTML}
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="project-tags">
+                                ${tagsHTML}
+                            </div>
+                            <div class="btn-group">
+                                <a href="${proj.link}" target="_blank" class="btn btn-primary">Live Project 🔗</a>
+                            </div>
+                        </div>
+                    </div>
+                        `;
+                        container.appendChild(article);
+                    });
+                }
+            }
+        }
+
         // Window Init
         window.addEventListener('load', () => {
+            renderProjectsPortfolio();
             initLocalInbox();
             initThemeMixer();
         });
